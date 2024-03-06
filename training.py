@@ -1,5 +1,5 @@
 # подключаем urlopen из модуля urllib
-from datetime import date
+
 from urllib.request import urlopen
 import urllib.request
 # подключаем библиотеку BeautifulSoup
@@ -10,24 +10,16 @@ import os
 import re
 import lxml.html
 import sys
+import datetime #импортируем возможность устанавливать дату
+import sys
+
+innedit = input("Введите ИНН:")
+year_edit = input("Введите год:")
+year = int(year_edit) #указываем год в будущем выбор из комбобокса
+first_day_of_year = datetime.date.min.replace(year = year).strftime('%d.%m.%Y') #установка первой даты диапазона с которой будет уточняться закупки
+last_day_of_year = datetime.date.max.replace(year = year).strftime('%d.%m.%Y') #установка последней даты диапазона с которой будет уточняться закупки + перевод в понимаемый сайтом формат оформления даты
 
 
-
-procedure_number = []
-customer = []
-method_of_conducting = []
-date_of_placement = []
-nmc = []
-inn_customer = []
-contract_price = []
-data_url = []
-# data_dict = {'Номер процедуры': procedure_number,
-#              'Заказчик': customer,
-#              'ИНН' : inn_customer,
-#              'Дата размещения': date_of_placement,
-#              'НМЦ': nmc,
-#              'Цена контракта' : contract_price,
-#              'Ссылка': data_url}
 
 # Список десктопных user agent
 user_agents = [
@@ -42,38 +34,47 @@ user_agent = random.choice(user_agents)
 # Указываем user agent в заголовках запроса перед выполнением запроса
 headers = {"User-Agent": user_agent}
 urlmain = "https://zakupki.gov.ru/epz/order/extendedsearch/results.html?searchString="
-search_inn = "7729082090"
+search_inn = str(innedit) #указываем ИНН - в дальнейшем из строки ввода информации
 morph_filter = "&morphology=on&search-filter=%D0%94%D0%B0%D1%82%D0%B5+%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F&"
 numberpage = "pageNumber=1&sortDirection=false&"
 recordperpage = "recordsPerPage=_500"
 otherfilter = "&showLotsInfoHidden=false&sortBy=UPDATE_DATE&fz44=on&pc=on&currencyIdGeneral=-1&"
 datefilter = "publishDateFrom="
-datefrom = "01.01.2023"
+daty = first_day_of_year
 datefilter2 = "&publishDateTo="
-dateto = "31.12.2023"
-yearfilter = datefilter+datefrom+datefilter2+dateto
+dateto = last_day_of_year
+yearfilter = datefilter+daty+datefilter2+dateto
 filterset = morph_filter+numberpage+recordperpage+otherfilter
 resultsearch = urlmain+search_inn+filterset+yearfilter
 print(resultsearch)
+print('Пожалуйста, подождите... Нужно немного времени для сбора данных')
 url = [
 # "https://zakupki.gov.ru/epz/order/extendedsearch/results.html?searchString=3666029505&morphology=on&search-filter=%D0%94%D0%B0%D1%82%D0%B5+%D1%80%D0%B0%D0%B7%D0%BC%D0%B5%D1%89%D0%B5%D0%BD%D0%B8%D1%8F&pageNumber=1&sortDirection=false&recordsPerPage=_500&showLotsInfoHidden=false&sortBy=UPDATE_DATE&fz44=on&pc=on&currencyIdGeneral=-1&publishDateFrom=01.01.2023&publishDateTo=31.12.2023"
 resultsearch
 ]
 # перебираем адрес из списка
 
+# try:
 for x in url:
-    # получаем исходный код очередной страницы из списка
-    html_code = str(urllib.request.urlopen(x).read().decode('UTF-8'))
+    while True:
+        try:
+            html_code = str(urllib.request.urlopen(x).read().decode('UTF-8')) #Открываем страницу и декодируем ее посредством кодировки UT8, она используется на сайте
 
-    # отправляем исходный код страницы на обработку в библиотеку
-    soup = BeautifulSoup(html_code,  'lxml')
+            # отправляем исходный код страницы на обработку в библиотеку
+            soup = BeautifulSoup(html_code,  'lxml')
 
         # находим название страницы с помощью метода find()
-    s = soup.findAll("div", {'class': "col-9 search-results"} ) # выбираем данные, которые необходимы для дальнейшей обработки (тело результата поиска)
-    customer = soup.find_all("div", {'class': "registry-entry__body-href"}) # вывод наименование ораганизации
-    nameprocurement = soup.find_all("div", {'class': "registry-entry__body-value"}) # вывод предмета контракта
-    nmc = soup.find_all("div", {'class': "price-block__value"}) #dвывод НМЦК контракта
+            s = soup.findAll("div", {'class': "col-9 search-results"} ) # выбираем данные, которые необходимы для дальнейшей обработки (тело результата поиска)
+            customer = soup.find_all("div", {'class': "registry-entry__body-href"}) # вывод наименование ораганизации
+            nameprocurement = soup.find_all("div", {'class': "registry-entry__body-value"}) # вывод предмета контракта
+            nmc = soup.find_all("div", {'class': "price-block__value"}) #dвывод НМЦК контракта
+        except Err:
+            continue
+        break
+
+ #       return()
+
 
     # выводим его на экран
-    print(customer, nameprocurement, nmc)
+print(customer, nameprocurement, nmc)
 
